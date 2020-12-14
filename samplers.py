@@ -43,11 +43,11 @@ def indices_except_undefined_sampler(dataset):
     PPClass = torch.sum(PPMatrix,dim=1)
     U_Matrix = torch.load(dataset.U_Matrix)['definition']
     V_Matrix = torch.load(dataset.V_Matrix)['definition']
-    assert ((len(PPClass) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset), f"Precipitation matrix size {len(PPClass)} does not match dataset size {len(dataset)}"
-    assert ((len(U_Matrix) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset), f"Precipitation matrix size {len(U_Matrix)} does not match dataset size {len(dataset)}"
-    assert ((len(V_Matrix) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset), f"Precipitation matrix size {len(V_Matrix)} does not match dataset size {len(dataset)}"
+    assert ((len(PPClass) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset)-1, f"Precipitation matrix size {len(PPClass)} does not match dataset size {len(dataset)}"
+    assert ((len(U_Matrix) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset)-1, f"Precipitation matrix size {len(U_Matrix)} does not match dataset size {len(dataset)}"
+    assert ((len(V_Matrix) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset)-1, f"Precipitation matrix size {len(V_Matrix)} does not match dataset size {len(dataset)}"
     samples_weight = []
-    for i in range(len(dataset)):
+    for i in range(len(dataset)-1):
         # transition imgs_dir to MeteoNetDataset : elt_i = ids[i*self.temporal_stride:self.temporal_stride*i + self.temporal_length]
         target_class = PPClass[dataset.temporal_stride*i + dataset.temporal_length]
         inputs_class = PPClass[dataset.temporal_stride*i: dataset.temporal_stride*i + dataset.temporal_length_inputs]
@@ -77,11 +77,11 @@ def downsample_to_classes_above_classth_sampler(dataset, class_th):
     PPClass = torch.sum(PPMatrix,dim=1)
     U_Matrix = torch.load(dataset.U_Matrix)['definition']
     V_Matrix = torch.load(dataset.V_Matrix)['definition']
-    assert ((len(PPClass) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset), f"Precipitation matrix size {len(PPClass)} does not match dataset size {len(dataset)}"
-    assert ((len(U_Matrix) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset), f"Precipitation matrix size {len(U_Matrix)} does not match dataset size {len(dataset)}"
-    assert ((len(V_Matrix) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset), f"Precipitation matrix size {len(V_Matrix)} does not match dataset size {len(dataset)}"
+    assert ((len(PPClass) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset)-1, f"Precipitation matrix size {len(PPClass)} does not match dataset size {len(dataset)}"
+    assert ((len(U_Matrix) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset)-1, f"Precipitation matrix size {len(U_Matrix)} does not match dataset size {len(dataset)}"
+    assert ((len(V_Matrix) - dataset.temporal_length) // dataset.temporal_stride) == len(dataset)-1, f"Precipitation matrix size {len(V_Matrix)} does not match dataset size {len(dataset)}"
     samples_weight = []
-    for i in range(len(dataset)):
+    for i in range(len(dataset)-1):
         # transition rain_dir to MeteoNetDataset : elt_i = ids[i*self.temporal_stride:self.temporal_stride*i + self.temporal_length]
         target_class = PPClass[dataset.temporal_stride*i + dataset.temporal_length]
         # Condition to meet for targets
