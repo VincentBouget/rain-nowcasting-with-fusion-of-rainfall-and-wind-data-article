@@ -6,28 +6,34 @@ This repository aims at expliciting the training procedure of the deep learning 
 
 ___
 
-## Installation
+## Demonstrator
 
-* Downloading the directory :
+* Downloading the directory:
 ```
 git clone https://gitlab.com/Vincentbouget/rain-nowcasting-using-deep-learning.git
 ```
-* Creating a conda environment with the required packages :
+
+* Installing python modules (with pyenv) and downloading data:
 ```
-conda create --name rnc-ml --file requirements.txt -c pytorch python=3
+./setup.sh
+```
+
+* Training the model and performing forecast:
+```
+./run_jupyter.sh
 ```
 
 ## The data
 
-The data used to train the network is the MeteoNet database (https://meteonet.umr-cnrm.fr/) which provides meteorogical parameters over the French territory from 2016 to 2018, for detailed information about pre-processing see the paper. The whole database being too large for a simple demonstrator, **we provide pre-processed data for February and March of 2016, 2017 and 2018**. The pre-processed data of rain and wind can be directly downloaded at https://www-pequan.lip6.fr/~bereziat/rain-nowcasting/data.tar.gz.
+The data used to train the network is the MeteoNet database (https://meteonet.umr-cnrm.fr/) which provides meteorogical parameters over the French territory from 2016 to 2018, for detailed information about pre-processing see the paper. The whole database being too large for a simple demonstrator, **we provide pre-processed data for February and March of 2016, 2017 and 2018**. The pre-processed data of rain and wind can be directly downloaded at https://www-pequan.lip6.fr/~bereziat/rain-nowcasting/data.tar.gz (data are downloaded by `./setup.sh`). 
 
 ## Usage of this repository
 
-Train.ipynb is a jupyter notebook presenting the training procedure. First be sure to fulfill the requirements sepcified in requirements.txt, then download the data and pathes, finally you can tune the training parameters to impact the training process.
+`Train.ipynb` is a jupyter notebook presenting the training procedure. First be sure to fulfill the requirements specified in `requirements.txt`, then download the data and patches, finally you can tune the training parameters to impact the training process.
 
 ## Visualizing
 
-During the training process several parameters are saved (loss, F1 score, inputs, predictions...) and can be visualized in real time using tensorboard. The command is detailed in the "Visualizing results" cell in train.py.
+During the training process several parameters are saved (loss, F1 score, inputs, predictions...) and can be visualized in real time using tensorboard. The command is detailed in the "Visualizing results" cell in `train.py`.
 
 ## Model
 

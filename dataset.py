@@ -85,11 +85,15 @@ class MeteoNetDataset(Dataset):
             #inputs sequence
             assert len(imgs_files) == self.temporal_length, \
                 f'Images found for the ID {idx}: {imgs_files} doesn\'t match {self.temporal_length}'
-            sequence = torch.unsqueeze(torch.tensor(np.load(imgs_files[0])['data'],dtype=torch.float32),dim=0)
+            rain_file = np.load(imgs_files[0])
+            rain_data = list(rain_file.values())[0]
+            sequence = torch.unsqueeze(torch.tensor(rain_data,dtype=torch.float32),dim=0)
             sequence = torch.log(1+sequence)/self.norm_factor
             #loads rainfall and wind
             for file in imgs_files[1:self.temporal_length_inputs]:
-                img = torch.unsqueeze(torch.tensor(np.load(file)['data'],dtype=torch.float32),dim=0)
+                rain_file = np.load(file)
+                rain_data = list(rain_file.values())[0]
+                img = torch.unsqueeze(torch.tensor(rain_data,dtype=torch.float32),dim=0)
                 #Normalization:
                 img = torch.log(1+img)/self.norm_factor
                 sequence = torch.cat((sequence,img),dim=0)
@@ -104,7 +108,9 @@ class MeteoNetDataset(Dataset):
                 img = (img-self.norm_factor_V['mean'])/np.sqrt(self.norm_factor_V['variance'])
                 sequence = torch.cat((sequence,img),dim=0)
             #target
-            target = torch.from_numpy(np.load(imgs_files[-1])['data'])
+            target_file = np.load(imgs_files[-1])
+            target_data = list(target_file.values())[0]
+            target = torch.from_numpy(target_data)
             return {'inputs': sequence, 'target': map_to_classes(target,self.thresholds), "identifier":idx[0]}
     
         else :
@@ -112,94 +118,64 @@ class MeteoNetDataset(Dataset):
             return {'inputs': None, 'target': None, "identifier":idx[0]}
     
 
-#%% Used in : calculate_precipitation_matrix.py
+#%%
 
-class RainDataset(Dataset):
-    def __init__(self, imgs_dir, spatial_length):
-        """
-        Parameters
-        ----------
-        imgs_dir : str
-            Path to images directory.
-        """
-        self.imgs_dir = imgs_dir
-        files = [os.path.splitext(file)[0] for file in os.listdir(imgs_dir) if os.path.isfile(os.path.join(imgs_dir,file))]
-        self.ids = sorted(files, key=lambda x: (self.fetch_infos(x)))
-        self.spatial_length = spatial_length
-
-    def __len__(self):
-        # (N-F)/S +1
-        return len(self.ids)
-    
-    @classmethod
-    def fetch_infos(cls,filename):
-        year,month,day,hour,minute = [k[1:] for k in filename.split(".")[0].split("-")]
-        return int(year),int(month),int(day),int(hour),int(minute)
-    
-    def __getitem__(self, i):
-        """
-        Parameters
-        ----------
-        i : int
-        
-        Returns
-        -------
-        Image i
-        """
-        assert i<len(self), \
-            f'Element index out of dataset bounds : {i} // 0-{len(self)-1}'
-        idx = self.ids[i]
-        img_file = os.path.join(self.imgs_dir,idx+'.npz')
-        #inputs sequence
-        image = torch.from_numpy(np.load(img_file)['data'])
-        assert (len(image.shape)==2 and image.shape[0]==self.spatial_length and image.shape[1]==self.spatial_length), f"image shape does not match : {image.shape}, should be ({self.spatial_length},{self.spatial_length})"
-        return image
-    
-#%% Used in : calculate_wind_matrix.py
-
-class WindDataset(Dataset):
-    def __init__(self, rain_dir, wind_dir, spatial_length):
-        """
-        Parameters
-        ----------
-        rain_dir : str
-            Path to rain directory.
-        wind_dir : str
-            Path to wind directory.
-        """
+class DatasetPrediction(Dataset):
+    def __init__(self, rain_dir, U_dir, V_dir, thresholds):
         self.rain_dir = rain_dir
-        self.wind_dir = wind_dir
-        self.spatial_length = spatial_length
         files = [os.path.splitext(file)[0] for file in os.listdir(rain_dir) if os.path.isfile(os.path.join(rain_dir,file))]
-        self.ids = sorted(files, key=lambda x: (self.fetch_infos(x)))
+        self.ids = sorted(files, key=lambda x: fetch_infos(x))
+        self.U_dir = U_dir
+        self.V_dir = V_dir
+        self.temporal_length_inputs = 12
+        self.temporal_length = 18
+        self.thresholds = thresholds
+        
+        # Normalization factors
+        self.norm_factor = 8.9
+        self.norm_factor_U = {'mean': 71, 'variance': 183038}
+        self.norm_factor_V = {'mean': 19, 'variance': 175321}
+        
+        logging.info('Creating dataset')
 
     def __len__(self):
-        # (N-F)/S +1
-        return len(self.ids)
-    
-    @classmethod
-    def fetch_infos(cls,filename):
-        year,month,day,hour,minute = [k[1:] for k in filename.split(".")[0].split("-")]
-        return int(year),int(month),int(day),int(hour),int(minute)
+        return 1
     
     def __getitem__(self, i):
-        """
-        Parameters
-        ----------
-        i : int
-        
-        Returns
-        -------
-        Image i
-        """
-        assert i<len(self), \
-            f'Element index out of dataset bounds : {i} // 0-{len(self)-1}'
-        idx = self.ids[i]
-        img_file = os.path.join(self.wind_dir,idx+'.npz')
-        if os.path.isfile(img_file):
-            #inputs sequence
-            image = torch.from_numpy(np.load(img_file)['data']).to(dtype=torch.float32)
-            assert (len(image.shape)==2 and image.shape[0]==self.spatial_length and image.shape[1]==self.spatial_length), f"image shape does not match : {image.shape}, should be ({self.spatial_length},{self.spatial_length})"
-            return image
-        else:
-            return torch.tensor(0,dtype=torch.float32)
+        assert i==0, f'Element index out of dataset bounds : {i} // 1'
+        imgs_files = [os.path.join(self.rain_dir,k)+'.npz' for k in self.ids]
+        U_files = [os.path.join(self.U_dir,os.path.split(k)[-1]+'.npz') for k in self.ids]
+        V_files = [os.path.join(self.V_dir,os.path.split(k)[-1]+'.npz') for k in self.ids]
+                
+        #inputs sequence
+        rain_file = np.load(imgs_files[0])
+        rain_data = list(rain_file.values())[0]
+        sequence = torch.unsqueeze(torch.tensor(rain_data,dtype=torch.float32),dim=0)
+        sequence = torch.log(1+sequence)/self.norm_factor
+        #loads rainfall and wind
+        for file in imgs_files[1:self.temporal_length_inputs]:
+            rain_file = np.load(file)
+            rain_data = list(rain_file.values())[0]
+            img = torch.unsqueeze(torch.tensor(rain_data,dtype=torch.float32),dim=0)
+            #Normalization:
+            img = torch.log(1+img)/self.norm_factor
+            sequence = torch.cat((sequence,img),dim=0)
+        for file in U_files[:self.temporal_length_inputs]:
+            U_file = np.load(file)
+            U_data = list(U_file.values())[0]
+            img = torch.unsqueeze(torch.tensor(U_data,dtype=torch.float32),dim=0)
+            #Normalization:
+            img = (img-self.norm_factor_U['mean'])/np.sqrt(self.norm_factor_U['variance'])
+            sequence = torch.cat((sequence,img),dim=0)
+        for file in V_files[:self.temporal_length_inputs]:
+            V_file = np.load(file)
+            V_data = list(V_file.values())[0]
+            img = torch.unsqueeze(torch.tensor(V_data,dtype=torch.float32),dim=0)
+            #Normalization:
+            img = (img-self.norm_factor_V['mean'])/np.sqrt(self.norm_factor_V['variance'])
+            sequence = torch.cat((sequence,img),dim=0)
+        #target
+        target_file = np.load(imgs_files[-1])
+        target_data = list(target_file.values())[0]
+        target = torch.from_numpy(target_data)
+        return {'inputs': sequence, 'target': map_to_classes(target,self.thresholds)}
