@@ -18,6 +18,9 @@ rm -f /tmp/requirements.txt
 pip install jupyter
 
 echo "Download dataset"
-wget --no-check-certificate https://www-pequan.lip6.fr/~bereziat/rain-nowcasting/data.tar.gz -O - | tar xvf -
+wget --no-check-certificate https://www-pequan.lip6.fr/~bereziat/rain-nowcasting/data.tar.gz
+tar xvfz data.tar.gz
+rm -f data.tar.gz
+
 
 
