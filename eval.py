@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# All right reserved by Vincent Bouget, Arthur Filoche, Anastase Charantonis, Dominique Béréziat, Julien Brajard
+# All rights reserved by Vincent Bouget, Arthur Filoche, Anastase Charantonis, Dominique Béréziat, Julien Brajard
 # A word funded by Sorbonne Center for Artificial Intelligence (Sorbonne Université)
 
 import torch
