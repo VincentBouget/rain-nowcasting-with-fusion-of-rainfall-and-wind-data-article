@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# All rights reserved by Vincent Bouget, Arthur Filoche, Anastase Charantonis, Dominique Béréziat, Julien Brajard
+# A research work funded by Sorbonne Center for Artificial Intelligence (Sorbonne Université)
 
 import os
 import torch
