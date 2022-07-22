@@ -134,10 +134,12 @@ class DatasetPrediction(Dataset):
         self.thresholds = thresholds
         
         # Normalization factors
-        self.norm_factor = 8.9
-        self.norm_factor_U = {'mean': 71, 'variance': 183038}
-        self.norm_factor_V = {'mean': 19, 'variance': 175321}
-        
+        self.norm_factor = 8.9      # valeurs de olddata/rainmap/train/PPMatrix/ppMatrix_X0_Y0
+#        self.norm_factor_U = {'mean': 71, 'variance': 183038} # ce sont valeurs de olddata/wind/U/PPMatrix/val/ppMatrix_X0_Y0  ! (donc val au lieu de train !!!!)
+#        self.norm_factor_V = {'mean': 19, 'variance': 175321} # valeurs de olddata/wind/V/PPMatrix/train/ppMatrix_X0_Y0
+        self.norm_factor_U = {'mean': 200, 'variance': 330571} # valeurs lues dans Matrix de minidata
+        self.norm_factor_V = {'mean': 32, 'variance': 247401}
+       
         logging.info('Creating dataset')
 
     def __len__(self):
